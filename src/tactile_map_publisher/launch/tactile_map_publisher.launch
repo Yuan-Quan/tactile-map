@@ -1,7 +1,7 @@
 <launch>
   <!-- Pure pursuit path tracking -->
-  <node pkg="park_point_chooser" type="park_point_chooser" name="park_point_chooser" output="screen">
-    <rosparam file="$(find park_point_chooser)/config/park_point_chooser.yaml" command="load" />
+  <node pkg="tactile_map_publisher" type="tactile_map_publisher" name="tactile_map_publisher" output="screen">
+    <rosparam file="$(find tactile_map_publisher)/config/tactile_map_publisher.yaml" command="load" />
     <remap from="costmap" to="/move_base/global_costmap/costmap" />
     <remap from="costmap_update" to="/move_base/global_costmap/costmap_updates" />
   </node>
