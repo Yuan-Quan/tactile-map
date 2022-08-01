@@ -64,22 +64,25 @@ private:
   tf2_ros::Buffer tf_buffer_;
   tf2_ros::TransformListener tf_listener_;
   tf2_ros::TransformBroadcaster tf_broadcaster_;
-  string global_frame_id_;
-  int freq_, lethal_cost_;
-  double map_res_;
+  string global_frame_id_, base_frame_id_;
+  int freq_, lethal_cost_, tactile_width_, tactile_height_;
+  double map_res_, tactile_res_;
   Eigen::Vector2d map_origin_;
 
   dynamic_reconfigure::Server<tactile_map_publisher::TactileMapPublisherConfig> reconfigure_server_;
   dynamic_reconfigure::Server<tactile_map_publisher::TactileMapPublisherConfig>::CallbackType reconfigure_callback_;
 
   visualization_msgs::MarkerArray markers_;
+  visualization_msgs::Marker tactile_overlay_;
   std::vector<std::vector<int>> map_;
+  std::vector<std::vector<int>> tactile_map_;
 
   void recivecCostmap(nav_msgs::OccupancyGrid map);
   void recivecCostmapUpdate(map_msgs::OccupancyGridUpdate update);
   void publishMarker();
   int getMapValue(Eigen::Vector2d pos);
   int getMapValue(int i, int j);
+  int getTactileMapValue(Eigen::Vector2i pos);
   Eigen::Vector2i getMapCord(Eigen::Vector2d pos);
   Eigen::Vector2d getMapPos(Eigen::Vector2i pos);
 };
@@ -87,15 +90,43 @@ private:
 TactileMapPublisher::TactileMapPublisher() : global_frame_id_("map"), nh_private_("~"), tf_listener_(tf_buffer_)
 {
   // Get parameters from the parameter server
-  nh_private_.param<string>("global_frame_id", global_frame_id_, "map");
+  nh_private_.param<string>("fixed_frame_id", global_frame_id_, "map");
+  nh_private_.param<string>("base_frame_id", base_frame_id_, "base_link");
   nh_private_.param<int>("rate", freq_, 12);
   nh_private_.param<int>("lethal_cost", lethal_cost_, 99);
+  nh_private_.param<double>("tactile_resolution", tactile_res_, 0.5);
+  nh_private_.param<int>("tactile_width", tactile_width_, 4);
+  nh_private_.param<int>("tactile_height", tactile_height_, 4);
+
+  // initialize the tactile_map_
+  tactile_map_.resize(tactile_height_);
+  for (size_t i = 0; i < tactile_height_; i++)
+  {
+    tactile_map_[i].resize(tactile_width_);
+    for (size_t j = 0; j < tactile_width_; j++)
+    {
+      tactile_map_[i][j] = 0;
+    }
+  }
 
   pub_vis_ = nh_.advertise<visualization_msgs::MarkerArray>("tactile_map_visualization", 0);
   sub_costmap_ = nh_.subscribe("costmap", 1, &TactileMapPublisher::recivecCostmap, this);
   sub_costmap_update_ = nh_.subscribe("costmap_update", 1, &TactileMapPublisher::recivecCostmapUpdate, this);
 
-  markers_.markers.resize(1);
+  markers_.markers.resize(2);
+
+  tactile_overlay_.header.frame_id = global_frame_id_;
+  tactile_overlay_.header.stamp = ros::Time::now();
+  tactile_overlay_.ns = "tactile_map_publisher";
+  tactile_overlay_.action = visualization_msgs::Marker::ADD;
+  tactile_overlay_.pose.orientation.w = 1.0;
+  tactile_overlay_.id = 1;
+  tactile_overlay_.type = visualization_msgs::Marker::POINTS;
+  tactile_overlay_.scale.x = tactile_res_;
+  tactile_overlay_.scale.y = tactile_res_;
+  tactile_overlay_.color.r = 1.0f;
+  tactile_overlay_.color.a = 0.3;
+  tactile_overlay_.points.clear();
 
   reconfigure_callback_ = boost::bind(&TactileMapPublisher::reconfigure, this, _1, _2);
   reconfigure_server_.setCallback(reconfigure_callback_);
@@ -179,6 +210,29 @@ Eigen::Vector2d TactileMapPublisher::getMapPos(Eigen::Vector2i pos)
   return Eigen::Vector2d(x, y);
 }
 
+int TactileMapPublisher::getTactileMapValue(Eigen::Vector2i pos)
+{
+  // look up tf to determine the position of base in the map frame
+  geometry_msgs::TransformStamped tf;
+  try
+  {
+    tf = tf_buffer_.lookupTransform(global_frame_id_, base_frame_id_, ros::Time(0));
+  }
+  catch (tf2::TransformException &ex)
+  {
+    ROS_WARN(" tf error:\n");
+    ROS_WARN_STREAM(ex.what());
+  }
+  Eigen::Vector2i centered_pos;
+  centered_pos.x() = pos.x() - tactile_height_ / 2;
+  centered_pos.y() = pos.y() - tactile_width_ / 2;
+  geometry_msgs::Point p;
+  p.x = tf.transform.translation.x + centered_pos.x() * tactile_res_ + tactile_res_ / 2;
+  p.y = tf.transform.translation.y + centered_pos.y() * tactile_res_ + tactile_res_ / 2;
+  tactile_overlay_.points.clear();
+  tactile_overlay_.points.push_back(p);
+}
+
 void TactileMapPublisher::publishMarker()
 {
   visualization_msgs::Marker lethal_obstacles;
@@ -216,6 +270,7 @@ void TactileMapPublisher::publishMarker()
   }
 
   markers_.markers[0] = lethal_obstacles;
+  markers_.markers[1] = tactile_overlay_;
 
   pub_vis_.publish(markers_);
 }
@@ -227,6 +282,7 @@ void TactileMapPublisher::run()
     ros::spinOnce();
     publishMarker();
     ros::spinOnce();
+    getTactileMapValue({2, 1});
     std::this_thread::sleep_for(std::chrono::milliseconds(1000 / freq_));
   }
 }
