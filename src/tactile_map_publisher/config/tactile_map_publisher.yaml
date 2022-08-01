@@ -1,6 +1,6 @@
 global_frame_id: map
 clearance: 0.4
-lethal_cost: 70
+lethal_cost: 100
 room_b_goals: [
   4.639, -3.284, 0.000,
   0.000, 0.000, -0.710, 0.704,
