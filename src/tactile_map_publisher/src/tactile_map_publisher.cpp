@@ -49,6 +49,11 @@ public:
     return sqrt(pow(dx * res, 2) + pow(dy * res, 2));
   }
 
+  inline int relu(int x)
+  {
+    return x > 0 ? x : 0;
+  }
+
   //! Dynamic reconfigure callback.
   void reconfigure(tactile_map_publisher::TactileMapPublisherConfig &config, uint32_t level);
 
@@ -122,8 +127,10 @@ TactileMapPublisher::TactileMapPublisher() : global_frame_id_("map"), nh_private
   tactile_overlay_.pose.orientation.w = 1.0;
   tactile_overlay_.id = 1;
   tactile_overlay_.type = visualization_msgs::Marker::POINTS;
-  tactile_overlay_.scale.x = tactile_res_;
-  tactile_overlay_.scale.y = tactile_res_;
+  // tactile_overlay_.scale.x = tactile_res_;
+  // tactile_overlay_.scale.y = tactile_res_;
+  tactile_overlay_.scale.x = 0.04;
+  tactile_overlay_.scale.y = 0.04;
   tactile_overlay_.color.r = 1.0f;
   tactile_overlay_.color.a = 0.3;
   tactile_overlay_.points.clear();
@@ -226,11 +233,51 @@ int TactileMapPublisher::getTactileMapValue(Eigen::Vector2i pos)
   Eigen::Vector2i centered_pos;
   centered_pos.x() = pos.x() - tactile_height_ / 2;
   centered_pos.y() = pos.y() - tactile_width_ / 2;
-  geometry_msgs::Point p;
-  p.x = tf.transform.translation.x + centered_pos.x() * tactile_res_ + tactile_res_ / 2;
-  p.y = tf.transform.translation.y + centered_pos.y() * tactile_res_ + tactile_res_ / 2;
+  Eigen::Vector2d center_pos;
+  center_pos.x() = tf.transform.translation.x + centered_pos.x() * tactile_res_;
+  center_pos.y() = tf.transform.translation.y + centered_pos.y() * tactile_res_;
+  Eigen::Vector2i center_map = getMapCord(center_pos);
+
+  int unit_size;
+  if (map_res_ < 10e-6)
+  {
+    unit_size = 0;
+  }
+  else
+  {
+    unit_size = tactile_res_ / map_res_;
+  }
+
   tactile_overlay_.points.clear();
-  tactile_overlay_.points.push_back(p);
+  int value = 0;
+  for (size_t i = 0; i < unit_size; i++)
+  {
+    for (size_t j = 0; j < unit_size; j++)
+    {
+      if (center_map.x() + i >= map_.size() || center_map.y() + i >= map_[0].size())
+      {
+        continue;
+        ROS_WARN("out of map");
+      }
+      auto pos = getMapPos({center_map.x() + i, center_map.y() + j});
+      geometry_msgs::Point p;
+      p.x = pos.x();
+      p.y = pos.y();
+      p.z = 0;
+      int dv = relu(getMapValue(center_map.x() + i, center_map.y() + j));
+      // if (dv < lethal_cost_)
+      //{
+      //   dv = 0;
+      // }
+      value += dv;
+      tactile_overlay_.points.push_back(p);
+    }
+  }
+
+  value /= pow(unit_size, 2);
+
+  ROS_INFO("value: %d", value);
+  return value;
 }
 
 void TactileMapPublisher::publishMarker()
@@ -282,7 +329,7 @@ void TactileMapPublisher::run()
     ros::spinOnce();
     publishMarker();
     ros::spinOnce();
-    getTactileMapValue({2, 1});
+    getTactileMapValue({2, 2});
     std::this_thread::sleep_for(std::chrono::milliseconds(1000 / freq_));
   }
 }
