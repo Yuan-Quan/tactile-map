@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="world" value="17th_xunfei"/>
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- Run the stage simulator -->
+  <node pkg="stage_ros" type="stageros" name="stageros" args="$(find stage_pkg)/worlds/$(arg world).world" respawn="false" >
+    <remap from="base_scan" to="scan" />
+    <param name="base_watchdog_timeout" value="0.01" />
+    <remap from="cmd_vel" to="/cmd_vel" />
+  </node>
+
+  <include file="$(find mbot_navigation)/launch/nav.launch" />
+  <include file="$(find pid_parking)/launch/pid_parking.launch"/>
+  <include file="$(find tactile_map_publisher)/launch/tactile_map_publisher.launch"/>
+  <!-- <include file="$(find config_changer)/launch/config_changer.launch"/> -->
+  <!--include file="$(find lnc_nav)/launch/lnc_nav.launch"/-->
+
+</launch>
