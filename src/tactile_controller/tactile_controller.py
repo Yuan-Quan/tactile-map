@@ -3,6 +3,7 @@
 from __future__ import print_function
 from select import select
 import sys
+import time
 from geometry_msgs.msg import TwistStamped
 from geometry_msgs.msg import Twist
 import rospy
@@ -23,7 +24,7 @@ else:
 
 
 MUX_TABLE = {
-#   CH S0 S1 S2 S3
+#   CH EN S0 S1 S2 S3
     0: (0, 0, 0, 0),
     1: (1, 0, 0, 0),
     2: (0, 1, 0, 0),
@@ -42,13 +43,24 @@ MUX_TABLE = {
     15: (1, 1, 1, 1),
 }
 
-EN_GPIO = 7 # we use this pin, 
-            # cuz when a Pi is first powered up, the first eight GPIOs have pull-ups enabled 
+RL0_GPIO = 21
+RL1_GPIO = 20
+RL2_GPIO = 16
+RL3_GPIO = 26
+RL4_GPIO = 19
+RL5_GPIO = 13
+RL6_GPIO = 6
+RL7_GPIO = 12
+RL8_GPIO = 5
+RL9_GPIO = 0
+RL10_GPIO = 1
+RL11_GPIO = 7
+RL12_GPIO = 8
+RL13_GPIO = 11
+RL14_GPIO = 9
+RL15_GPIO = 25
 
-S0_GPIO = 11
-S1_GPIO = 13
-S2_GPIO = 15
-S3_GPIO = 16
+RL_PINS = [RL0_GPIO, RL1_GPIO, RL2_GPIO, RL3_GPIO, RL4_GPIO, RL5_GPIO, RL6_GPIO, RL7_GPIO, RL8_GPIO, RL9_GPIO, RL10_GPIO, RL11_GPIO, RL12_GPIO, RL13_GPIO, RL14_GPIO, RL15_GPIO]
 
 class ControllerThread(threading.Thread):
     def __init__(self, rate):
@@ -63,36 +75,32 @@ class ControllerThread(threading.Thread):
         else:
             self.timeout = None
 
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(EN_GPIO, GPIO.OUT)
-        GPIO.setup(S0_GPIO, GPIO.OUT)
-        GPIO.setup(S1_GPIO, GPIO.OUT)
-        GPIO.setup(S2_GPIO, GPIO.OUT)
-        GPIO.setup(S3_GPIO, GPIO.OUT)
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(RL_PINS, GPIO.OUT)
         print("GPIO setup complete")
 
-        GPIO.output(S0_GPIO, 0)
-        GPIO.output(S1_GPIO, 0)
-        GPIO.output(S2_GPIO, 0)
-        GPIO.output(S3_GPIO, 0)
-        GPIO.output(EN_GPIO, 0)
+        GPIO.output(RL_PINS, 1)
+
 
         self.start()
+
+    def set_on(self, idx):
+        if idx < 0 or idx >= 16:
+            print("invalid idx")
+            return
+
 
     def update(self, data):
         pass
 
     def stop(self):
-        GPIO.output(S0_GPIO, 0)
-        GPIO.output(S1_GPIO, 0)
-        GPIO.output(S2_GPIO, 0)
-        GPIO.output(S3_GPIO, 0)
-        GPIO.output(EN_GPIO, 1)
+        GPIO.output(RL_PINS, 1)
         GPIO.cleanup()
         print("GPIO uninitialize")
         self.done = True
         self.update(None)
         self.join()
+        exit()
         
     def run(self):
         while not self.done:
@@ -103,6 +111,9 @@ class ControllerThread(threading.Thread):
             self.condition.release()
 
             # write to gpio
+            for i in range(16):
+                self.set_on(i);
+                time.sleep(0.01)
 
         # write stop message when thread exits.
 
@@ -118,6 +129,8 @@ if __name__ == "__main__":
     try:
         while not rospy.is_shutdown():
             pass
+
+
     except Exception as e:
         print(e)
     finally:
