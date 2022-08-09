@@ -16,7 +16,6 @@
 #include <nav_msgs/Odometry.h>
 #include <nav_msgs/OccupancyGrid.h>
 #include <map_msgs/OccupancyGridUpdate.h>
-#include <ackermann_msgs/AckermannDriveStamped.h>
 #include <visualization_msgs/MarkerArray.h>
 
 #include <kdl/frames.hpp>

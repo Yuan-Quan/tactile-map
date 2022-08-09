@@ -17,7 +17,6 @@
   <build_depend>tf2</build_depend>
   <build_depend>tf2_ros</build_depend>
   <build_depend>orocos_kdl</build_depend>
-  <build_depend>ackermann_msgs</build_depend>
   <!-- For dynamic reconfigure -->
   <build_depend>rospy</build_depend>
   <build_depend>dynamic_reconfigure</build_depend>
@@ -32,7 +31,6 @@
   <run_depend>tf2</run_depend>
   <run_depend>tf2_ros</run_depend>
   <run_depend>orocos_kdl</run_depend>
-  <run_depend>ackermann_msgs</run_depend>
   <!-- For dynamic reconfigure -->
   <run_depend>rospy</run_depend>
   <run_depend>dynamic_reconfigure</run_depend>
