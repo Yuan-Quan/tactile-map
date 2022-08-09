@@ -1,2 +1,0 @@
-tactile_map:tactile_map_publisher
--G Ninja -DCATKIN_DEVEL_PREFIX=/home/cirno/source/repos/tactile_map/devel_isolated -DCMAKE_INSTALL_PREFIX=/home/cirno/source/repos/tactile_map/install_isolated
