@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <name>tactile_controller</name>
+  <version>1.0.0</version>
+  <description>controll the tactile interface through GPIOs.</description>
+
+  <maintainer email="metroyuan@gmail.com">Quan Yuan</maintainer>
+
+  <license>BSD</license>
+
+  <author>Quan Yuan</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>rospy</run_depend>
+</package>
