@@ -1,0 +1,3 @@
+<launch>
+  <node pkg="tactile_controller" type="tactile_controller.py" name="tactile_controller" output="screen"/>
+</launch>

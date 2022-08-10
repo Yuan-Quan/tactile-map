@@ -11,9 +11,7 @@
   </node>
 
   <include file="$(find mbot_navigation)/launch/nav.launch" />
-  <include file="$(find pid_parking)/launch/pid_parking.launch"/>
   <include file="$(find tactile_map_publisher)/launch/tactile_map_publisher.launch"/>
-  <!-- <include file="$(find config_changer)/launch/config_changer.launch"/> -->
-  <!--include file="$(find lnc_nav)/launch/lnc_nav.launch"/-->
+  <include file="$(find tactile_controller)/launch/tactile_controller.launch" />
 
 </launch>

@@ -6,6 +6,7 @@ import sys
 import time
 from geometry_msgs.msg import TwistStamped
 from geometry_msgs.msg import Twist
+from nav_msgs.msg import OccupancyGrid
 import rospy
 import RPi.GPIO as GPIO
 # from msilib.schema import Control
@@ -62,78 +63,50 @@ RL15_GPIO = 25
 
 RL_PINS = [RL0_GPIO, RL1_GPIO, RL2_GPIO, RL3_GPIO, RL4_GPIO, RL5_GPIO, RL6_GPIO, RL7_GPIO, RL8_GPIO, RL9_GPIO, RL10_GPIO, RL11_GPIO, RL12_GPIO, RL13_GPIO, RL14_GPIO, RL15_GPIO]
 
-class ControllerThread(threading.Thread):
-    def __init__(self, rate):
-        super(ControllerThread, self).__init__()
-        self.condition = threading.Condition()
-        self.done = False
-
-        # Set timeout to None if rate is 0 (causes new_message to wait forever
-        # for new data to publish)
-        if rate != 0.0:
-            self.timeout = 1.0 / rate
-        else:
-            self.timeout = None
-
+class Kontroller(object):
+    def __init__(self):
+        rospy.init_node('tactile_controller')
+        self.rate = rospy.get_param("~rate", 12)
+        self.thres = rospy.get_param("~threshould", 50)
+        self.grid = OccupancyGrid()
+        self.sub_grid = rospy.Subscriber("tk_map", OccupancyGrid, self.recive_map)
         GPIO.setmode(GPIO.BCM)
-        GPIO.setup(RL_PINS, GPIO.OUT)
+        GPIO.setup(RL_PINS, GPIO.IN)
+        print(RL_PINS)
         print("GPIO setup complete")
+        #self.write()
 
-        GPIO.output(RL_PINS, 1)
+    def recive_map(self, grid):
+        self.grid = grid
+        self.write()
 
-
-        self.start()
-
-    def set_on(self, idx):
-        if idx < 0 or idx >= 16:
-            print("invalid idx")
-            return
-
-
-    def update(self, data):
-        pass
+    def write(self):
+        i = 0
+        for item in self.grid.data:
+            if item >= self.thres:
+                md = GPIO.OUT
+            else:
+                md = GPIO.IN
+            GPIO.setup(RL_PINS[i], md)
+            i += 1
+            if i > 16:
+                return
 
     def stop(self):
-        GPIO.output(RL_PINS, 1)
+        print("\nShutdown gracefully")
+        GPIO.setup(RL_PINS, GPIO.IN)
         GPIO.cleanup()
         print("GPIO uninitialize")
-        self.done = True
-        self.update(None)
-        self.join()
-        exit()
         
     def run(self):
-        while not self.done:
-            self.condition.acquire()
-            # Wait for a new message or timeout.
-            self.condition.wait(self.timeout)
-            print("run!!!")
-            self.condition.release()
-
-            # write to gpio
-            for i in range(16):
-                self.set_on(i);
-                time.sleep(0.01)
-
-        # write stop message when thread exits.
-
+        pass
 
 if __name__ == "__main__":
 
-    rospy.init_node('tactile_controller')
 
-    repeat = rospy.get_param("~repeat_rate", 0.0)
+    controller = Kontroller()
 
-    ctrl_thread = ControllerThread(repeat)
+    rospy.on_shutdown(controller.stop)
 
-    try:
-        while not rospy.is_shutdown():
-            pass
+    rospy.spin()
 
-
-    except Exception as e:
-        print(e)
-    finally:
-        print("Shutdown gracefully")
-        ctrl_thread.stop()
-        exit()

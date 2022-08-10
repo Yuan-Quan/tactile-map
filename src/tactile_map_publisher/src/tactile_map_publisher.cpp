@@ -290,7 +290,7 @@ int TactileMapPublisher::getTactileMapValue(Eigen::Vector2i pos)
 
   value /= pow(unit_size, 2);
 
-  ROS_INFO("value: %d", value);
+  //ROS_INFO("value: %d", value);
   return value;
 }
 
