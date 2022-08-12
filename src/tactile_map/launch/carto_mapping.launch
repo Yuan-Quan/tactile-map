@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+  <include file="$(find tactile_map)/launch/static_tf.launch" />
+  <include file="$(find fdilink_ahrs)/launch/ahrs_data.launch" />
+  <include file="$(find ydlidar_ros_driver)/launch/X3.launch" />
+  <node name="cartographer_node" pkg="cartographer_ros"
+      type="cartographer_node" args="
+          -configuration_directory $(find tactile_map)/config/carto
+          -configuration_basename tk_map.lua"
+      output="screen">
+    <remap from="scan" to="scan" />
+  </node>
+
+  <node name="cartographer_occupancy_grid_node" pkg="cartographer_ros"
+      type="cartographer_occupancy_grid_node" args="-resolution 0.04" />
+
+  <node name="rviz" pkg="rviz" type="rviz" 
+	  args="-d $(find tactile_map)/config/carto/cartographer.rviz" />
+
+  <!--node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster" args="0 0 0 0 0 0 /map /odom 20" /-->
+  <include file="$(find tactile_map_publisher)/launch/tactile_map_publisher.launch"/>
+  <include file="$(find tactile_controller)/launch/tactile_controller.launch" />
+</launch>

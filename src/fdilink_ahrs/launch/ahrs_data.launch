@@ -7,7 +7,7 @@
      若使用DETA100,则value="/dev/wheeltec_ch340"
      若使用WHEELTEC N系列，则不需要改动 -->
 
-    <param name="port"  value="/dev/fdilink_ahrs"/>
+    <param name="port"  value="/dev/ttyACM0"/>
 
     <!-- 波特率 -->
     <param name="baud"  value="921600"/>
@@ -16,7 +16,7 @@
     <param name="imu_topic"  value="imu"/>
 
     <!-- 发布的imu话题中的frame_id -->
-    <param name="imu_frame"  value="gyro_link"/>
+    <param name="imu_frame"  value="imu_link"/>
 
     <!-- 地磁北的yaw角 -->
     <param name="mag_pose_2d_topic"  value="/mag_pose_2d"/>

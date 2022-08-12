@@ -1,0 +1,11 @@
+<launch>
+	<!-- This file contains all the static tf publisher -->
+
+  <!-- Devices, Sensors -->
+  <!-- those are measured physical distance between sensors and base center -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser"
+    args="0.0 0.0 0.0 0.0 0.0 0.0 /base_link /laser_link 20" />
+  <node pkg="tf" type="static_transform_publisher" name="baselink_to_imu"
+    args="0.0 0.0 0.0 0.0 0.0 0.0 /base_link /imu_link 20" />
+
+</launch>

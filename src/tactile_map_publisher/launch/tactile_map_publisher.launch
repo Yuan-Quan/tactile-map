@@ -2,8 +2,8 @@
   <!-- Pure pursuit path tracking -->
   <node pkg="tactile_map_publisher" type="tactile_map_publisher" name="tactile_map_publisher" output="screen">
     <rosparam file="$(find tactile_map_publisher)/config/tactile_map_publisher.yaml" command="load" />
-    <remap from="costmap" to="/move_base/global_costmap/costmap" />
-    <remap from="costmap_update" to="/move_base/global_costmap/costmap_updates" />
+    <remap from="costmap" to="map" />
+    <remap from="costmap_update" to="map_updates" />
   </node>
 
 </launch>

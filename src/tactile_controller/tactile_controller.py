@@ -67,7 +67,7 @@ class Kontroller(object):
     def __init__(self):
         rospy.init_node('tactile_controller')
         self.rate = rospy.get_param("~rate", 12)
-        self.thres = rospy.get_param("~threshould", 50)
+        self.thres = rospy.get_param("~threshould", 10)
         self.grid = OccupancyGrid()
         self.sub_grid = rospy.Subscriber("tk_map", OccupancyGrid, self.recive_map)
         GPIO.setmode(GPIO.BCM)
@@ -82,15 +82,22 @@ class Kontroller(object):
 
     def write(self):
         i = 0
-        for item in self.grid.data:
-            if item >= self.thres:
-                md = GPIO.OUT
-            else:
-                md = GPIO.IN
-            GPIO.setup(RL_PINS[i], md)
-            i += 1
-            if i > 16:
-                return
+        for i in range(4):
+            for j in range(4):
+                idx = i*4 + j
+                item = self.grid.data[idx]
+                if item >= self.thres:
+                    md = GPIO.OUT
+                else:
+                    md = GPIO.IN
+                self.set_pin(j, i, md)
+
+    def set_pin(self, i, j, state):
+        idx = i*4 + j
+        if idx >= 16 or idx <0:
+            print("out of range pin idx")
+            return
+        GPIO.setup(RL_PINS[idx], state)
 
     def stop(self):
         print("\nShutdown gracefully")
