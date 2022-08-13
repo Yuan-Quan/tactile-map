@@ -14,9 +14,19 @@
 
     通过向周围发射激光, 探测障碍物的距离, 从而确定障碍物的位置
 
+    <block>
+    <img src="images/lidar.png" height=200 />
+    <img src="images/lidar_scan.jpg" height=200 />
+    </block>
+
 1. 惯性测量单元 (IMU)
 
     通过测量加速度, 角速度, 磁场强度等参数, 为用户的位置和姿态提供参考
+
+    <block>
+    <img src="images/imu.png" height=200 />
+    <img src="images/imu_diagram.jpg" height=200 />
+    </block>
 
 ### 单板计算机
 
@@ -24,15 +34,21 @@
 
     接受激光雷达与惯性测量单元的数据, 进行处理, 建立周围环境的地图, 并将控制信号发送给触摸反馈装置
 
+    <img src="images/raspi.jpg" height=200 />
+
 ### 触摸反馈装置
 
 1. 驱动电路
 
     接受来自树梅派的控制信号, 将其进行解码, 电流放大, 从而驱动触摸反馈装置的电磁铁
 
+    <img src="images/driver_circuit.png" height=200 />
+
 1. 触摸终端
 
     一个矩阵的电磁铁, 通过驱动电路的控制, 使金属柱体突出或缩进. 用户可以通过触摸感受到金属柱体的位置
+
+    <img src="images/tactile_interface.png" height=200 />
 
 ## 工作原理
 
@@ -42,13 +58,21 @@
 
 1. 通过来自IMU的重力加速度矢量, 去除激光雷达的倾斜导致的畸变
 
+<img src="images/lidar_distortion_diagram.png" height=200 />
+
+图中, 蓝色的为激光雷达的原始数据, 红色为矫正后的数据
+
 ### 实时定位与建图
 
 使用了Google的Cartographer算法, 通过激光雷达与IMU的数据, 构建地图
 
+![demo_2d](images/demo_2d.gif)
+
 ### 触摸信号的生成
 
 通过Cartographer提供的定位, 在用户周围的地图中搜索一个区域, 将其降采样. 降采样后的每个像素分别对应一个触摸反馈设备上的金属柱体
+
+<img src="images/down_sample.png" height=200 />
 
 ### 触摸终端的控制
 
